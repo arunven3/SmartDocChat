@@ -11,6 +11,9 @@ export class Chat {
   @Column('text',  { nullable: true })
   answer: string | null;
 
+  @Column('text')
+  task_id: string;
+
   @CreateDateColumn()
   createdAt: Date;
 

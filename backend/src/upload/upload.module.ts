@@ -16,14 +16,16 @@ import { TypeOrmModule } from '@nestjs/typeorm';
 
 import { UploadController } from './upload.controller';
 import { UploadService } from './upload.service';
-import { Document } from '../entities/document.entity';
-import { Chunk } from 'src/entities/chunk.entity';
+import { Document } from '../database/filehandling/document/document.entity';
+import { Chunk } from 'src/database/filehandling/chunk/chunk.entity';
 import { EmbeddingService } from 'src/embedding/embedding.service';
+import { DocumentRepositoryService } from 'src/database/filehandling/document/document.repository.service';
+import { ChunkRepositoryService } from 'src/database/filehandling/chunk/chunk.repository.service';
 
 @Module({
   imports: [TypeOrmModule.forFeature([Document, Chunk])],
   controllers: [UploadController],
-  providers: [UploadService, EmbeddingService],
+  providers: [UploadService, EmbeddingService, DocumentRepositoryService, ChunkRepositoryService],
 })
 export class UploadModule {}
 

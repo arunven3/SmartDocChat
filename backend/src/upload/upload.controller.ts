@@ -10,7 +10,6 @@ export class UploadController {
   @Post()
   @UseInterceptors(FilesInterceptor('files'))
   async uploadFile(@UploadedFiles() files: Array<Express.Multer.File>) {
-    const docResult = await this.uploadService.handleUpload(files);
-    return { documentId: docResult };
+    return await this.uploadService.handleUpload(files);
   }
 }

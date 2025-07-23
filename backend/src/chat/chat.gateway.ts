@@ -11,9 +11,9 @@ export class ChatGateway {
   server: Server;
 
   @SubscribeMessage('askQuestion')
-  async handleAsk(@MessageBody() payload: { docId: number; question: string }) {
-    console.log('📥 Received question:', payload);
-    const message = await this.chatService.getAImessage(payload.docId, payload.question);
+  async handleAsk(@MessageBody() payload: { taskId: string; question: string }) {
+    console.log('Received question:', payload);
+    const message = await this.chatService.getAImessage(payload.taskId, payload.question);
 
     const response = await fetch('http://localhost:11434/api/chat', {
       method: 'POST',
@@ -39,7 +39,7 @@ export class ChatGateway {
             const json = JSON.parse(line);
             const token = json.message?.content;
             if (token) {
-              console.log('📤 Emitting answer chunk:', token);
+              console.log('Emitting answer chunk:', token);
               this.server.emit('answer_chunk', token);
             }
           } catch (err) {
