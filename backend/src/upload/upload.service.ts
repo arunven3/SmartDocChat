@@ -1,21 +1,17 @@
 
 import { Injectable } from '@nestjs/common';
 import * as pdf from 'pdf-parse';
-import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
-import { Document } from '../entities/document.entity';
-import { Chunk } from 'src/entities/chunk.entity';
 import { EmbeddingService } from 'src/embedding/embedding.service';
+// import { DocumentRepositoryService, CreateDocumentDto } from 'src/database/document/document.repository.service';
 import * as math from 'mathjs';
+import axios from 'axios';
+import { randomUUID } from 'crypto';
 
 
 @Injectable()
 export class UploadService {
   constructor(
-    @InjectRepository(Document)
-    private docRepo: Repository<Document>,
-    @InjectRepository(Chunk)
-    private chunkRepo: Repository<Chunk>,
+    // private documentRepo : DocumentRepositoryService,
     private embeddingService: EmbeddingService
   ) { }
 
@@ -47,18 +43,19 @@ export class UploadService {
         Input: ${text}
         `;
 
-      const response = await fetch('http://localhost:11434/api/generate', {
+      const response = await axios.post('http://localhost:11434/api/embeddings', {
         method: 'POST',
         body: JSON.stringify({
-          model: 'paraphrase-multilingual',
+          model: 'snowflake-arctic-embed',
+          stream: 'false',
           prompt: systemPrompt,
         }),
         headers: { 'Content-Type': 'application/json' },
       });
 
-      const data = await response.json();
+      const data = response.data.embedding;
 
-      console.log(data);
+      console.log(response.data);
       const raw = data.response.trim();
 
       const vector = JSON.parse(raw);
@@ -66,42 +63,23 @@ export class UploadService {
     }
   };
 
-  async handleUpload(files: Express.Multer.File[]): Promise<number | string> {
+  async handleUpload(files: Express.Multer.File[]): Promise<{}> {
+    const taskId = randomUUID();
+
     try {
-      const fileName = `Uploaded-${Date.now()}`;
-
-      let combinedText = '';
-
       for (const file of files) {
-        const data = await pdf(file.buffer);
-        combinedText += '\n' + data.text;
-      }
-      
-      if (!combinedText) {
-        throw new Error('PDF content is empty or could not be parsed.');
-      }
+          const data = await pdf(file.buffer);
 
-      const doc = this.docRepo.create({
-        filename: fileName,
-        content: combinedText,
-      });
-      
-      const savedDoc = await this.docRepo.save(doc);
-      const chunks = this.chunk.split(combinedText);
+          if (!data.text) {
+            throw new Error('PDF content is empty or could not be parsed.');
+          }
 
-      for (const chunkText of chunks) {
-        const vector = await this.embeddingService.embed(chunkText)
+          
+          const docId = await this.embeddingService.embedAndStore(data.text, taskId, file.originalname);
+        }
 
-        const chunk = this.chunkRepo.create({
-          content: chunkText,
-          embedding: vector,
-          document_id: savedDoc.id,
-          document: savedDoc,
-        });
-        await this.chunkRepo.save(chunk);
-      }
+        return {message: 'file saved.', taskId}
 
-      return savedDoc.id;
     } catch (error) {
       let message = 'An error occurred while processing the PDF file.';
       console.error('Error parsing PDF:', error);
@@ -111,7 +89,7 @@ export class UploadService {
         message = 'Please upload a non-password protected PDF file.';
       }
 
-      return message;
+      return {message , taskId};
     }
   }
 }

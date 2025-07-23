@@ -28,8 +28,10 @@ const FileUploader = ({ onUploadSuccess, summarizeFinished }) => {
           'Content-Type': 'multipart/form-data'
         }
       });
-      onUploadSuccess(res.data.documentId);
-      setDocumentId(res.data.documentId);
+
+      // console.log(res.data.taskId);
+      onUploadSuccess(res.data.taskId);
+      setDocumentId(res.data.taskId);
       // alert("Upload successful!");
     } catch (err) {
       console.error(err);

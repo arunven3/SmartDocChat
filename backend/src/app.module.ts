@@ -2,24 +2,31 @@ import { Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { UploadModule } from './upload/upload.module';
 import { ChatModule } from './chat/chat.module';
-import { Document } from './entities/document.entity';
-import { Chunk } from './entities/chunk.entity';
-import { Chat } from './entities/chat.entity';
 import { join } from 'path';
-import { EmbeddingService } from './embedding/embedding.service';
+import { EmbeddingModule } from './embedding/embedding.module';
+import { FilehandlingModule } from './database/filehandling/filehandling.module';
+import { Document } from './database/filehandling/document/document.entity';
+import { Chunk } from './database/filehandling/chunk/chunk.entity';
+import { Chat } from './database/chat.entity';
 
 @Module({
   imports: [
     TypeOrmModule.forRoot({
       type: 'sqlite',
-      database:  join(__dirname, '..', 'db.sqlite'),
-      entities: [Document, Chat, Chunk],
+      database:  join(__dirname, '../database/', 'db.sqlite'),
+      entities: [Document, Chunk, Chat],
       synchronize: true,
     }),
-    TypeOrmModule.forFeature([Document, Chat, Chunk]),
+    TypeOrmModule.forFeature(),
     UploadModule,
-    ChatModule
+    ChatModule,
+    EmbeddingModule,
+    FilehandlingModule
   ],
-  providers: [EmbeddingService],
+  providers: [],
 })
-export class AppModule {}
+export class AppModule {
+  constructor(){
+    join(__dirname, '../database/', 'db.sqlite')
+  }
+}

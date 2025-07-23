@@ -1,21 +1,17 @@
 import { Entity, PrimaryGeneratedColumn, Column, CreateDateColumn, OneToMany } from 'typeorm';
-import { Chunk } from './chunk.entity';
+import { Chunk } from '../chunk/chunk.entity';
 
 @Entity()
 export class Document {
   @PrimaryGeneratedColumn()
   id: number;
 
-  @Column()
-  filename: string;
+  @Column('text')
+  task_id: string
 
   @Column('text')
-  content: string;
-
-  @CreateDateColumn()
-  createdAt: Date;
-
- @OneToMany(() => Chunk, chunk => chunk.document)
+  file_name: string;
+  
+  @OneToMany(() => Chunk, chunk => chunk.document)
   chunks: Chunk[];
-
 }

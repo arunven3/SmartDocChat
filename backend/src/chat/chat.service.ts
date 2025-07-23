@@ -1,24 +1,18 @@
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
-import { Document } from '../entities/document.entity';
-import { Chat } from '../entities/chat.entity';
+import { Chat } from '../database/chat.entity';
 import { CreateChatDto } from './dto/create-chat.dto';
 import { EmbeddingService } from 'src/embedding/embedding.service';
-import { Chunk } from 'src/entities/chunk.entity';
-
-// import  * as math from 'mathjs'
+import { DocumentRepositoryService } from 'src/database/filehandling/document/document.repository.service';
 
 @Injectable()
 export class ChatService {
   constructor(
-    @InjectRepository(Document)
-    private docRepo: Repository<Document>,
     @InjectRepository(Chat)
     private ChatRepository: Repository<Chat>,
-    @InjectRepository(Chunk)
-    private chunkRepo: Repository<Chunk>,
-    private embeddingService: EmbeddingService
+    private embeddingService: EmbeddingService,
+    private documentRepositoryService: DocumentRepositoryService
   ) { }
 
 
@@ -60,23 +54,12 @@ export class ChatService {
     }
   }
 
-  async getAImessage(documentId: number, question: string): Promise<any[]> {
-    const doc = await this.docRepo.findOneBy({ id: documentId });
-    if(!doc) return []; 
+  async getAImessage(taskId: string, question: string): Promise<any[]> {
+    const relevantChunks = await this.embeddingService.findRelevantChunks(taskId, question);
+    const previousChat = await this.ChatRepository.find({ select: ['question', 'answer', 'document_id'], where: { task_id: taskId } });
+    const topChunks = relevantChunks.map(c => c.chunk).join('\n\n');
 
-    const previousChat = await this.ChatRepository.find({ select: ['question', 'answer', 'document_id'], where: { document_id: documentId } });
-    const queryVector = await this.embeddingService.embed(question);
-    const allChunks = await this.chunkRepo.find({where: {document_id: documentId}});
-
-    const scored = allChunks.map(chunk => ({
-      chunk,
-      score: this.chunk.cosineSimilarity(queryVector, chunk.embedding),
-    }));
-
-    scored.sort((a, b) => b.score - a.score);
-    const topChunks = scored.slice(0, 4).map(s => s.chunk.content).join('\n\n');
-
-    // console.log(topChunks );
+    console.log(topChunks );
 
     const messages = [
       {
@@ -91,7 +74,7 @@ export class ChatService {
       {
         role: 'user',
         // content: `Context:\n${topChunks}\n\n`, 
-        content: `Document: ${doc.content}`
+        content: `Document: ${topChunks}`
       },
     ];
 
@@ -116,35 +99,37 @@ export class ChatService {
   }
 
   async ask(docId: number, question: string): Promise<string> {
-    const message = await this.getAImessage(docId, question);
+    // // const message = await this.getAImessage(docId, question);
+    
 
-    if(message.length === 0) {;
-      return "Error: No document found, Please upload a document first.";
-    }
+    // if(message.length === 0) {;
+    //   return "Error: No document found, Please upload a document first.";
+    // }
 
-    const response = await fetch('http://localhost:11434/api/chat', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        stream: false,
-        model: "llama3.2",
-        // model: "tinyllama:1.1b",
-        messages: message,
-      }),
-    });
+    // const response = await fetch('http://localhost:11434/api/chat', {
+    //   method: 'POST',
+    //   headers: { 'Content-Type': 'application/json' },
+    //   body: JSON.stringify({
+    //     stream: false,
+    //     model: "llama3.2",
+    //     // model: "tinyllama:1.1b",
+    //     messages: message,
+    //   }),
+    // });
 
-    const data = await response.json();
-    const answer = data.message?.content ?? "No answer found.";
+    // const data = await response.json();
+    // const answer = data.message?.content ?? "No answer found.";
 
-    // Save the conversation
-    if(answer && answer !== "No answer found.") {
-      await this.create({
-        document_id: docId,
-        question: question,
-        answer: answer,
-      })
-    };
+    // // Save the conversation
+    // if(answer && answer !== "No answer found.") {
+    //   await this.create({
+    //     document_id: docId,
+    //     question: question,
+    //     answer: answer,
+    //   })
+    // };
 
-    return answer;
+    // return answer;
+    return '';
   }
 }

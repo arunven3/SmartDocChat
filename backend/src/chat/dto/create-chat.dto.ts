@@ -1,5 +1,5 @@
 export class CreateChatDto {
-    document_id: number;
+    task_id: string;
     question: string;  
     answer: string;
 }
