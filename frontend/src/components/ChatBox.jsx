@@ -1,5 +1,4 @@
-import React, { useState, useRef } from 'react';
-import axios from 'axios';
+import { useState, useRef } from 'react';
 import { useEffect } from 'react';
 import { useSocket } from '../hooks/useSocket';
 import ReactMarkdown from 'react-markdown';
@@ -48,10 +47,13 @@ const ChatBox = ({ documentId, isChatStarted }) => {
 
     socket.on('connect', () => {
       console.log('Socket connected:', socket.id);
-      socket.emit('askQuestion', {
-        docId: documentId,
-        question: 'Summarize the document.'
-      });
+
+      if(messages.length === 0) {
+        socket.emit('askQuestion', {
+          taskId: documentId,
+          question: 'Summarize the document.'
+        });
+      }
     });
 
     return () => {
@@ -64,12 +66,12 @@ const ChatBox = ({ documentId, isChatStarted }) => {
     setMessages((prev) => [...prev, { sender: 'user', text: input.trim() }]);
 
     console.log('Emitting:', {
-      docId: documentId,
+      taskId: documentId,
       question: input.trim(),
     });
 
     socket.emit('askQuestion',  {
-      docId: documentId,
+      taskId: documentId,
       question: input.trim()
     });
 
@@ -81,7 +83,7 @@ const ChatBox = ({ documentId, isChatStarted }) => {
       <div ref={messagesContainerRef} className='chat-box-messages'>
           {messages.map((msg, idx) => (
             <div key={idx} className={ (msg.sender === 'user' ? 'send' : 'recieve') + ' message' } style={{ textAlign: msg.sender === 'user' ? 'right' : 'left' }}>
-              <b>{msg.sender === 'user' ? "You" : "Bot"}:</b> <ReactMarkdown rehypePlugins={[rehypeRaw, rehypeSanitize]}>{msg.text}</ReactMarkdown>
+              <b>{msg.sender === 'user' ? "You" : name}:</b> <ReactMarkdown rehypePlugins={[rehypeRaw, rehypeSanitize]}>{msg.text}</ReactMarkdown>
             </div>
           ))}
       </div>

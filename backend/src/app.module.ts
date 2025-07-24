@@ -7,7 +7,8 @@ import { EmbeddingModule } from './embedding/embedding.module';
 import { FilehandlingModule } from './database/filehandling/filehandling.module';
 import { Document } from './database/filehandling/document/document.entity';
 import { Chunk } from './database/filehandling/chunk/chunk.entity';
-import { Chat } from './database/chat.entity';
+import { Chat } from './database/datahandling/chat/chat.entity';
+import { DatahandlingModule } from './database/datahandling/datahandling.module';
 
 @Module({
   imports: [
@@ -17,11 +18,11 @@ import { Chat } from './database/chat.entity';
       entities: [Document, Chunk, Chat],
       synchronize: true,
     }),
-    TypeOrmModule.forFeature(),
     UploadModule,
     ChatModule,
     EmbeddingModule,
-    FilehandlingModule
+    FilehandlingModule,
+    DatahandlingModule
   ],
   providers: [],
 })

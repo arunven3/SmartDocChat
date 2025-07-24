@@ -4,7 +4,6 @@ import { ChatService } from './chat.service';
 import fetch from 'node-fetch';
 
 @WebSocketGateway({cors: { origin: '*'}})
-
 export class ChatGateway {
   constructor(private readonly chatService: ChatService) {}
   @WebSocketServer()
@@ -19,7 +18,9 @@ export class ChatGateway {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
-        model: 'llama3.2',
+        model: 'llama3.2', // Takes 3.2 gb RAM, Gives result from doucmnt
+        // model: 'tinyllama:1.1b', // takes 1 gb of RAM, Bad results
+        // model: 'mistral:latest', // Takes 7.5gb of RAM, Gives better results
         messages: message,
         stream: true
       })
@@ -29,17 +30,18 @@ export class ChatGateway {
       console.error('No stream body');
       return;
     }
+
     const decoder = new TextDecoder();
+    let answer = '';
 
     for await (const chunk of response.body as any) {
-      const text = decoder.decode(chunk);
-      text.split('\n').forEach(line => {
+      decoder.decode(chunk).split('\n').forEach(line => {
         if (line.trim()) {
           try {
-            const json = JSON.parse(line);
-            const token = json.message?.content;
+            const token = JSON.parse(line).message?.content;
+
             if (token) {
-              console.log('Emitting answer chunk:', token);
+              answer += token;
               this.server.emit('answer_chunk', token);
             }
           } catch (err) {
@@ -49,6 +51,7 @@ export class ChatGateway {
       });
     }
 
+    this.chatService.saveChat(payload.taskId, payload.question, answer);
     this.server.emit('answer_done');
   }
 }

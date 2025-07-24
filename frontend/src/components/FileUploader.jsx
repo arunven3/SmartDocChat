@@ -29,13 +29,11 @@ const FileUploader = ({ onUploadSuccess, summarizeFinished }) => {
         }
       });
 
-      // console.log(res.data.taskId);
       onUploadSuccess(res.data.taskId);
       setDocumentId(res.data.taskId);
-      // alert("Upload successful!");
     } catch (err) {
       console.error(err);
-      // alert("Upload failed!");
+      alert("Upload failed!");
     } finally {
       setUploading(false);
     }
@@ -44,8 +42,8 @@ const FileUploader = ({ onUploadSuccess, summarizeFinished }) => {
   return (
     <div className="center" hidden={summarizeFinished}>
       <label htmlFor="fileUploader" className="file-uploader">
-        {documentId ? (
-          <span className="file-uploader-title">File uploaded successful,<br />Please wait for the Bot reply</span>
+        {documentId ? ( 
+          <span className="file-uploader-title">File uploaded successful,<br />Please wait for the SmartDocChat reply</span>
          ) :(
           <>
           <span className="file-uploader-title">Drop files here</span>
