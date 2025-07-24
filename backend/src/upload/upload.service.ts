@@ -75,7 +75,7 @@ export class UploadService {
           }
 
           
-          const docId = await this.embeddingService.embedAndStore(data.text, taskId, file.originalname);
+          await this.embeddingService.embedAndStore(data.text, taskId, file.originalname);
         }
 
         return {message: 'file saved.', taskId}

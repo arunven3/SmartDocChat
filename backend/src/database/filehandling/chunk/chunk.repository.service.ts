@@ -17,7 +17,7 @@ class ChunkRepositoryService {
     }
 
     async get(taskId: string): Promise<Chunk[]> {
-        return this.repo.find({ where: {task_id : taskId}});
+        return  await  this.repo.find({select:['chunk', 'embedding'], order:{id: 'ASC'} , where: {task_id: taskId}})
     }
 }
 

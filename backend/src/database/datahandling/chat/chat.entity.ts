@@ -5,10 +5,10 @@ export class Chat {
   @PrimaryGeneratedColumn()
   id: number;
 
-  @Column('text', { nullable: true })
+  @Column('text')
   question: string | null;
 
-  @Column('text',  { nullable: true })
+  @Column('text')
   answer: string | null;
 
   @Column('text')
@@ -16,8 +16,5 @@ export class Chat {
 
   @CreateDateColumn()
   createdAt: Date;
-
-  @Column('int')
-  document_id: number;
 }
 
